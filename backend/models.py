@@ -1,19 +1,14 @@
-from sqlalchemy import Column, String, Boolean, DateTime, Text, Numeric, ForeignKey, Enum
+from sqlalchemy import Column, String, Integer, DateTime, Numeric, ForeignKey, Boolean, Text
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.sql import func
+from sqlalchemy.orm import relationship
+from datetime import datetime
 import uuid
-import enum
 
 Base = declarative_base()
 
 def gen_uuid():
     return str(uuid.uuid4())
-
-class EstadoProveedor(str, enum.Enum):
-    pendiente = "pendiente"
-    en_revision = "en_revision"
-    aprobado = "aprobado"
-    rechazado = "rechazado"
 
 class Proveedor(Base):
     __tablename__ = "proveedores"
@@ -41,17 +36,33 @@ class OrdenCompra(Base):
 
 class Factura(Base):
     __tablename__ = "facturas"
-    id = Column(String, primary_key=True, default=gen_uuid)
+    id = Column(String, primary_key=True)
+    proveedor_id = Column(String, ForeignKey("proveedores.id"), nullable=False)
     serie = Column(String(10), nullable=False)
     correlativo = Column(String(10), nullable=False)
-    proveedor_id = Column(String, ForeignKey("proveedores.id"), nullable=False)
-    orden_compra_id = Column(String, ForeignKey("ordenes_compra.id"))
+    orden_compra_id = Column(String)
     monto_subtotal = Column(Numeric(12, 2), nullable=False)
     monto_igv = Column(Numeric(12, 2), nullable=False)
     monto_total = Column(Numeric(12, 2), nullable=False)
-    estado = Column(String(30), default="en_revision")
+    estado = Column(String(30), default="Emitida")
     cae = Column(String(100))
     creado_en = Column(DateTime, server_default=func.now())
+    lineas = relationship("FacturaLinea", back_populates="factura", cascade="all, delete-orphan")
+
+class FacturaLinea(Base):
+    __tablename__ = "factura_lineas"
+    id = Column(Integer, primary_key=True)
+    factura_id = Column(String, ForeignKey("facturas.id", ondelete="CASCADE"), nullable=False)
+    numero_linea = Column(Integer)
+    descripcion = Column(String, nullable=False)
+    cantidad = Column(Numeric(10, 2), nullable=False)
+    precio_unitario = Column(Numeric(12, 2), nullable=False)
+    monto_subtotal = Column(Numeric(12, 2), nullable=False)
+    igv = Column(Numeric(12, 2), nullable=False)
+    monto_total = Column(Numeric(12, 2), nullable=False)
+    codigo_producto = Column(String(50))
+    created_at = Column(DateTime, default=datetime.utcnow)
+    factura = relationship("Factura", back_populates="lineas")
 
 class Ticket(Base):
     __tablename__ = "tickets"
