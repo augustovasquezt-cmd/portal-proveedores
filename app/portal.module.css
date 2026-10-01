@@ -1,0 +1,59 @@
+.portal {
+  --color-blue-900: #173f68;
+  --color-blue-800: #204b73;
+  --color-blue-600: #007d8c;
+  --color-blue-100: #d9eef1;
+  --color-blue-50: #eaf4f6;
+  --color-gray-50: #f5f8fa;
+  --color-gray-100: #edf3f6;
+  --color-gray-200: #cfdee5;
+  --color-gray-400: #667f90;
+  --color-gray-500: #5d7385;
+  --color-gray-600: #425e73;
+  --color-gray-800: #173f68;
+  background: #f5f8fa;
+  color: #173f68;
+}
+
+.portal h1, .portal h2, .portal h3 {
+  color: #173f68;
+}
+
+.portal aside {
+  border-color: #cfdee5;
+}
+
+.portal aside nav a {
+  color: #173f68;
+}
+
+.portal aside nav a:hover {
+  background: #eaf4f6;
+}
+
+.portal aside nav a[aria-current="page"] {
+  color: #00818f;
+  background: #eaf4f6;
+  box-shadow: inset 0 -2px 0 #008c9c;
+}
+
+.portal :global(.bg-brand-teal) {
+  background: #008c9c;
+}
+
+.portal :global(.bg-brand-teal):hover {
+  background: #007381;
+}
+
+.portal :global(.bg-blue-900) {
+  background: #173f68;
+}
+
+.portal :where(input, select, textarea, button, a):focus-visible {
+  outline: 2px solid #008c9c;
+  outline-offset: 3px;
+}
+
+.portal main > div > :global(.bg-white) {
+  border-left: 3px solid #008c9c;
+}

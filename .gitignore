@@ -1,5 +1,6 @@
 # Python
 backend/venv/
+backend/.venv/
 backend/__pycache__/
 backend/*.pyc
 backend/.env
@@ -8,6 +9,7 @@ backend/.env
 node_modules/
 .next/
 .env.local
+*.tsbuildinfo
 
 # Mac
 .DS_Store

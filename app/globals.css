@@ -1,26 +1,49 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  color-scheme: light;
+  --background: #f5f8fa;
+  --foreground: #173f68;
 }
 
+/* Paleta aproximada de la referencia visual del portal. */
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+  --font-sans: Arial, Helvetica, sans-serif;
+  --font-mono: Consolas, "Liberation Mono", monospace;
+  --color-brand-navy: #173f68;
+  --color-brand-teal: #008c9c;
+  --color-brand-teal-hover: #007381;
+  --color-brand-soft: #eaf4f6;
+  --color-blue-50: #eaf4f6;
+  --color-blue-100: #d9eef1;
+  --color-blue-600: #007d8c;
+  --color-blue-800: #204b73;
+  --color-blue-900: #173f68;
+  --color-gray-50: #f5f8fa;
+  --color-gray-100: #edf3f6;
+  --color-gray-200: #cfdee5;
+  --color-gray-400: #667f90;
+  --color-gray-500: #5d7385;
+  --color-gray-600: #425e73;
+  --color-gray-800: #173f68;
 }
 
 body {
   background: var(--background);
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
+}
+
+@layer base {
+  :where(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-brand-teal);
+    outline-offset: 3px;
+  }
+
+  ::selection {
+    background: #d9eef1;
+    color: #173f68;
+  }
 }

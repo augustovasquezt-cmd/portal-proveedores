@@ -1,0 +1,19 @@
+{
+  "sociedades": [
+    {
+      "ruc": "20111111111",
+      "razon_social": "Sociedad demo receptora A",
+      "codigo_sap": "1000"
+    },
+    {
+      "ruc": "20122222222",
+      "razon_social": "Sociedad demo receptora B",
+      "codigo_sap": "2000"
+    },
+    {
+      "ruc": "20999999999",
+      "razon_social": "Sociedad demo receptora anterior",
+      "codigo_sap": "3000"
+    }
+  ]
+}

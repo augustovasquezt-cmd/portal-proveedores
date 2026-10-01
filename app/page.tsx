@@ -1,47 +1,67 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 export default function Home() {
   const router = useRouter()
-  const [ruc, setRuc] = useState('')
+  const [identificador, setIdentificador] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState('')
   const [cargando, setCargando] = useState(false)
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('sesion') === 'expirada') {
+      const timer = window.setTimeout(() => setError('Tu sesión expiró por seguridad. Ingresa nuevamente para continuar.'), 0)
+      return () => window.clearTimeout(timer)
+    }
+  }, [])
+
   const handleLogin = async () => {
     setError('')
     setCargando(true)
-    const rucRegex = /^\d{11}$/
-    if (!rucRegex.test(ruc)) {
-      setError('El RUC debe tener exactamente 11 dígitos numéricos')
+    const valor = identificador.trim()
+    if (!valor) {
+      setError('Ingresa tu RUC o correo corporativo.')
       setCargando(false)
       return
     }
+    const esRuc = /^\d{11}$/.test(valor)
 
     try {
       const res = await fetch('http://localhost:8000/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ruc, password }),
+        body: JSON.stringify(esRuc ? { ruc: valor, password } : { usuario: valor.toLowerCase(), password }),
       })
 
       const data = await res.json()
 
       if (!res.ok) {
-        setError(data.detail || 'Error al iniciar sesión')
+        setError(typeof data.detail === 'string' ? data.detail : 'Usuario o contraseña incorrectos.')
         setCargando(false)
         return
       }
 
       // Guardamos el token y datos del proveedor
       localStorage.setItem('access_token', data.access_token)
-      localStorage.setItem('ruc', data.proveedor.ruc)
-      localStorage.setItem('razon_social', data.proveedor.razon_social)
+      localStorage.setItem('user_role', data.rol || 'proveedor')
+      localStorage.setItem('password_change_required', data.debe_cambiar_password ? 'true' : 'false')
+      if (data.clientes?.length) localStorage.setItem('available_clients', JSON.stringify(data.clientes))
+      if (data.cliente_id) {
+        localStorage.setItem('client_id', data.cliente_id)
+        localStorage.setItem('client_name', data.clientes?.find((client: {id:string}) => client.id === data.cliente_id)?.nombre || '')
+      } else localStorage.removeItem('client_id')
+      if (data.proveedor) {
+        localStorage.setItem('ruc', data.proveedor.ruc)
+        localStorage.setItem('razon_social', data.proveedor.razon_social)
+      } else {
+        localStorage.removeItem('ruc')
+        localStorage.setItem('razon_social', data.usuario.nombre)
+      }
 
-      router.push('/dashboard')
-    } catch (err) {
+      router.push(data.debe_cambiar_password ? '/actualizar-password' : data.requiere_seleccion_cliente ? '/seleccionar-cliente' : data.rol === 'administrador_ivs' ? '/dashboard/ivs/clientes' : '/dashboard')
+    } catch {
       setError('No se pudo conectar con el servidor')
       setCargando(false)
     }
@@ -55,17 +75,18 @@ export default function Home() {
             <span className="text-white text-xl font-bold">P</span>
           </div>
           <h1 className="text-xl font-semibold text-gray-800">Portal de Proveedores</h1>
-          <p className="text-sm text-gray-500 mt-1">Ingresa con tu RUC y contraseña</p>
+          <p className="text-sm text-gray-500 mt-1">Ingresa con tu RUC o correo corporativo</p>
         </div>
         <div className="space-y-4">
           <div>
-            <label className="text-sm font-medium text-gray-600">RUC</label>
+            <label className="text-sm font-medium text-gray-600">RUC o correo electrónico</label>
             <input
               type="text"
-              placeholder="20xxxxxxxxx"
-              value={ruc}
-              onChange={(e) => setRuc(e.target.value)}
-              className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-900"
+              autoComplete="username"
+              placeholder="RUC de 11 dígitos o usuario@empresa.com"
+              value={identificador}
+              onChange={(e) => setIdentificador(e.target.value)}
+              className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-teal"
             />
           </div>
           <div>
@@ -75,7 +96,7 @@ export default function Home() {
               placeholder="••••••••"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-blue-900"
+              className="mt-1 w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-brand-teal"
             />
           </div>
 
@@ -86,13 +107,13 @@ export default function Home() {
           <button
             onClick={handleLogin}
             disabled={cargando}
-            className="w-full bg-blue-900 text-white rounded-lg py-2 text-sm font-medium hover:bg-blue-800 transition-colors disabled:opacity-50"
+            className="w-full bg-brand-teal text-white rounded-lg py-2 text-sm font-medium hover:bg-brand-teal-hover transition-colors disabled:opacity-50"
           >
             {cargando ? 'Ingresando...' : 'Ingresar al portal'}
           </button>
         </div>
         <p className="text-center text-xs text-gray-400 mt-6">
-          ¿Primera vez? <span className="text-blue-900 cursor-pointer">Solicita tu acceso aquí</span>
+          ¿Necesitas acceso? Contacta al administrador de tu empresa.
         </p>
       </div>
     </main>

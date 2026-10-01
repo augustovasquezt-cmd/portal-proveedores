@@ -18,13 +18,18 @@ export default function FacturasPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const router = useRouter();
+  const [estadoFiltro, setEstadoFiltro] = useState('todas');
 
   useEffect(() => {
+    const parametro = new URLSearchParams(window.location.search).get('estado');
+    const filtroTimer = window.setTimeout(() => {
+      if (parametro && ['revision','correccion','aprobadas','pagadas'].includes(parametro)) setEstadoFiltro(parametro);
+    }, 0);
     const fetchFacturas = async () => {
       try {
         const token = localStorage.getItem('access_token');
         if (!token) {
-          router.push('/login');
+          router.push('/');
           return;
         }
 
@@ -48,17 +53,28 @@ export default function FacturasPage() {
     };
 
     fetchFacturas();
+    return () => window.clearTimeout(filtroTimer);
   }, [router]);
+
+  const estadoNormalizado = (estado: string) => estado.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  const filtradas = facturas.filter((factura) => {
+    const estado = estadoNormalizado(factura.estado);
+    if (estadoFiltro === 'revision') return estado.includes('revision');
+    if (estadoFiltro === 'correccion') return estado.includes('rechaz') || estado.includes('observad') || estado.includes('correccion');
+    if (estadoFiltro === 'aprobadas') return (estado.includes('aprob') || estado.includes('aceptad')) && !estado.includes('pagad');
+    if (estadoFiltro === 'pagadas') return estado.includes('pagad');
+    return true;
+  });
 
   if (loading) return <div className="p-4">Cargando...</div>;
   if (error) return <div className="p-4 text-red-500">Error: {error}</div>;
 
   return (
     <div className="p-6">
-      <h1 className="text-3xl font-bold mb-6">Facturas</h1>
+      <h1 className="text-3xl font-bold mb-6">Facturas</h1><label className="block mb-5 max-w-sm text-sm font-medium">Estado<select className="block w-full mt-2 rounded-lg border border-slate-300 bg-white p-2" value={estadoFiltro} onChange={e => setEstadoFiltro(e.target.value)}><option value="todas">Todas las facturas</option><option value="revision">En revisión</option><option value="correccion">Requieren corrección</option><option value="aprobadas">Aprobadas pendientes de pago</option><option value="pagadas">Pagadas</option></select></label><Link href="/dashboard/facturas/nueva" className="inline-block bg-brand-teal text-white rounded-lg px-4 py-2 mb-6">Nueva factura</Link>
 
-      {facturas.length === 0 ? (
-        <p className="text-gray-500">No hay facturas disponibles</p>
+      {filtradas.length === 0 ? (
+        <p className="text-gray-500">{facturas.length === 0 ? 'No hay facturas disponibles' : 'No hay facturas para este estado'}</p>
       ) : (
         <div className="overflow-x-auto bg-white rounded-lg shadow">
           <table className="w-full">
@@ -73,7 +89,7 @@ export default function FacturasPage() {
               </tr>
             </thead>
             <tbody>
-              {facturas.map((factura) => (
+              {filtradas.map((factura) => (
                 <tr key={factura.id} className="border-b hover:bg-gray-50">
                   <td className="px-6 py-4">{factura.serie}</td>
                   <td className="px-6 py-4">{factura.correlativo}</td>
